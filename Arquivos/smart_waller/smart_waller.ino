@@ -1,59 +1,45 @@
 #include <EEPROM.h>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+LiquidCrystal_I2C lcd(0x27,16,2);
 
-int contador = 0;
-float valor = EEPROM.read(0);
-float valores[] = {1.0,0.50,0.25,0.10,0.05};
+const int receptorA = A0;
+const int receptorB = A1;
+const int receptorC = A2;
+const int receptorD = A3;
+const int receptorE = A6;
+float dimdim = 0;
+float lastdimdim = 0;
 
 unsigned long lastDebounceTime = 0;
-unsigned long debounceDelay = 250; 
-
-#include <Wire.h> 
-#include <LiquidCrystal_I2C.h>
-LiquidCrystal_I2C lcd(0x27,20,4);
+const int debounceDelay = 250;
 
 void setup() {
-  zerarCofre();
-  lcd.init();
-  lcd.clear();
-  lcd.backlight();
-  lcd.setCursor(2,0);
-  lcd.print("Smart wallet");
-  lcd.setCursor(2,1);
-  lcd.print("R$ ");
-  lcd.setCursor(5,1);
-  lcd.print(valor);
-  Serial.begin(115200);
-  pinMode(3, INPUT);
-  pinMode(13, OUTPUT);
+  Serial.begin(9600);
+  pinMode(receptorA, INPUT);
+  pinMode(receptorB, INPUT);
+  pinMode(receptorC, INPUT);
+  pinMode(receptorD, INPUT);
+  pinMode(receptorE, INPUT);
+  dimdim = EEPROM.read(0);
+  lastdimdim = EEPROM.read(0);
+  Serial.print("valor: ");
+  Serial.println(dimdim);
+  lcd_init();
 }
 
 void loop() {
-  int sensorVal = digitalRead(3);
-  
-  if (sensorVal == HIGH) {
-    digitalWrite(13, LOW);
-  } else {
-    digitalWrite(13, HIGH);
-    if ((millis() - lastDebounceTime) > debounceDelay) {
-      contador++;
-      valor += valores[2];
-      Serial.print("cont: ");
-      Serial.println(contador);
-      Serial.print("valor: ");
-      Serial.println(valor);
-      lcd.setCursor(2,1);
-      lcd.print("R$");
-      lcd.setCursor(5,1);
-      lcd.print(valor);
-      EEPROM.write(0, valor);
-      lastDebounceTime = millis();
-    }
-  }
-}
 
-void zerarCofre(){
-  EEPROM.write(0, 0);
-  valor = EEPROM.read(0);
-  lcd.setCursor(5,1);
-  lcd.print("0.00");
+  if (dimdim != lastdimdim ) {
+    Serial.print("valor: ");
+    Serial.println(dimdim);
+    lastdimdim = dimdim;
+  }
+
+  somar(receptorA, 0.10);
+  //somar(receptorB,0.5);
+  //somar(receptorC,0.50);
+  somar(receptorD, 0.25);
+  somar(receptorE, 1.0);
+
 }
